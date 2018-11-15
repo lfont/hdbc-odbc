@@ -15,9 +15,11 @@ module Database.HDBC.ODBC.Api.Imports
   , c_sqlGetDiagRec
   , c_sqlSetConnectAttr
   , c_sqlGetConnectAttr
+  , c_sqlSetStmtAttr
   , sQL_ATTR_AUTOCOMMIT
   , sQL_AUTOCOMMIT_ON
   , sQL_AUTOCOMMIT_OFF
+  , sQL_STMT_QUERY_TIMEOUT
   , sQL_IS_UINTEGER
   ) where
 
@@ -134,6 +136,15 @@ c_sqlSetConnectAttr conn attr valuePtr stringLength = do
   hdbcTrace $ printf "SQLSetConnectAttr (%s, %d, %s, %d) returned %d" (show conn) attr (show valuePtr) stringLength result
   return result
 
+foreign import #{CALLCONV} safe "sql.h SQLSetStmtAttr"
+  imp_sqlSetStmtAttr :: SQLHSTMT -> SQLINTEGER -> SQLPOINTER -> SQLINTEGER -> IO SQLRETURN
+
+c_sqlSetStmtAttr :: SQLHSTMT -> SQLINTEGER -> SQLPOINTER -> SQLINTEGER -> IO SQLRETURN
+c_sqlSetStmtAttr stmt attr valuePtr stringLength = do
+  result <- imp_sqlSetStmtAttr stmt attr valuePtr stringLength
+  hdbcTrace $ printf "SQLSetStmtAttr (%s, %d, %s, %d) returned %d" (show stmt) attr (show valuePtr) stringLength result
+  return result
+
 foreign import #{CALLCONV} safe "sql.h SQLGetConnectAttr"
   imp_sqlGetConnectAttr :: SQLHDBC -> SQLINTEGER -> SQLPOINTER -> SQLINTEGER -> Ptr SQLINTEGER -> IO SQLRETURN
 
@@ -155,3 +166,6 @@ sQL_AUTOCOMMIT_OFF = #{const SQL_AUTOCOMMIT_OFF}
 
 sQL_IS_UINTEGER :: SQLINTEGER
 sQL_IS_UINTEGER = #{const SQL_IS_UINTEGER}
+
+sQL_STMT_QUERY_TIMEOUT :: SQLINTEGER
+sQL_STMT_QUERY_TIMEOUT = #{const SQL_QUERY_TIMEOUT}
