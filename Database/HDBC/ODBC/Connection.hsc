@@ -167,7 +167,7 @@ frollback iconn = withDbcOrDie iconn $ \cconn ->
 
 fdisconnect iconn mchildren  = do
   closeAllChildren mchildren
-  freeDbcIfNotAlready True iconn
+  freeDbcIfNotAlready False iconn
 
 fGetAutoCommit :: SQLHDBC -> IO Bool
 fGetAutoCommit hdbc = do
