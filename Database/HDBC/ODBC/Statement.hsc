@@ -66,6 +66,11 @@ fGetQueryInfo iconn children query =
        addChild children (wrapStmt sstate)   -- We get error if we forget this one. Not sure why.
        fakeExecute' sstate
 
+fSetTimeout :: SQLHSTMT -> Int -> IO ()
+fSetTimeout stmt newValue = do
+  c_sqlSetStmtAttr stmt sQL_STMT_QUERY_TIMEOUT (wordPtrToPtr $ fromIntegral newValue) sQL_IS_UINTEGER
+    >>= checkError "sqlSetStmtAttr" (StmtHandle stmt)
+
 fakeExecute' :: SState -> IO ([SqlColDesc], [(String, SqlColDesc)])
 fakeExecute' sstate = do
   hdbcTrace "fakeExecute'"
@@ -152,6 +157,7 @@ fexecute sstate args = do
   hdbcTrace $ "fexecute: " ++ show (squery sstate) ++ show args
   (finish, result) <- withStmtOrDie (sstmt sstate) $ \hStmt -> do
     hdbcTrace "fexecute got stmt handle"
+    _ <- fSetTimeout hStmt 5
     -- Realloc the statement
     modifyMVar_ (stmtPrepared sstate) $ \prep -> do
       unless prep $
